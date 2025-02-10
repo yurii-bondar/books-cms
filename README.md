@@ -47,6 +47,20 @@ npm run migration
 npm run migration:test
 ```
 
+### For tests
+```bash
+# There is likely to be an error here because the 'role' and 'permissions' tables are empty
+npm run test
+
+# Fill in the above tables with data
+npm run migration:test
+
+# Run the tests again
+npm run test
+```
+### And enjoy this beauty
+![alt text](./imgs/testsResult.png)
+
 ### REST requests:
 
 ##### Register user:
@@ -156,7 +170,11 @@ mutation {
         newsprint
     }
 }
+```
+### 
+![alt text](./imgs/createBook.png)
 
+```graphql
 # createBooks
 mutation {
     createBooks(input: {
@@ -185,7 +203,10 @@ mutation {
         newsprint
     }
 }
+```
+![alt text](./imgs/createBooks.png)
 
+```graphql
 # updateBook
 mutation {
     updateBook(
@@ -204,13 +225,19 @@ mutation {
         add_date
     }
 }
+```
+![alt text](./imgs/updateBook.png)
 
+```graphql
 # delete
 mutation {
     deleteBook(id: 6, reason: "Test DynamoDB books logs")
 }
+```
+![alt text](./imgs/deleteBook.png)
 
-# get
+```graphql
+# getBooks
 query {
     getBooks(
         page:2
@@ -233,3 +260,18 @@ query {
     }
 }
 ```
+![alt text](./imgs/getBooks.png)
+
+### Main data storage
+##### The main data is stored in PostgreSQL
+- Registered users: *users*
+- Books: *books*
+- User roles: *roles*
+- Permissions: *permissions*
+
+### App logs
+##### DynamoDB is used to log user sessions and actions with books
+###### users_logs
+![alt text](./imgs/usersLogs.png)
+###### books_logs
+![alt text](./imgs/booksLogs.png)

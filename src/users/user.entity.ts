@@ -26,7 +26,7 @@ export class User {
   @Column({ default: RoleEnum.TRAINEE })
   roleId: number;
 
-  @ManyToOne(() => Role, { nullable: true })
-  @JoinColumn({ name: 'roleId' })
+  @ManyToOne(() => Role, { nullable: false })
+  @JoinColumn({ name: 'roleId', referencedColumnName: 'role_id' })
   role: Role;
 }

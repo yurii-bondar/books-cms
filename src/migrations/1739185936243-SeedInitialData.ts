@@ -3,23 +3,23 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 export class SeedInitialData1739185936243 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      INSERT INTO permissions (name)
+      INSERT INTO permissions (permission_id, name)
       VALUES 
-        ('all'), 
-        ('create'), 
-        ('update'), 
-        ('read'), 
-        ('delete'), 
-        ('comment');
+        (1, 'all'), 
+        (2, 'create'), 
+        (3, 'update'), 
+        (4, 'read'), 
+        (5, 'delete'), 
+        (6, 'comment');
     `);
 
     await queryRunner.query(`
-      INSERT INTO roles (name, permissions)
+      INSERT INTO roles (role_id, name, permissions)
       VALUES 
-        ('senior', ARRAY[1]),
-        ('middle', ARRAY[2,3,4,5,6]),
-        ('junior', ARRAY[2,3,4,6]),
-        ('trainee', ARRAY[4,6]);
+        (1, 'senior', ARRAY[1]),
+        (2, 'middle', ARRAY[2,3,4,5,6]),
+        (3, 'junior', ARRAY[2,3,4,6]),
+        (4, 'trainee', ARRAY[4,6]);
     `);
   }
 

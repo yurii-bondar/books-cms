@@ -13,6 +13,10 @@ export class UsersService {
     @InjectRepository(User) private usersRepository: Repository<User>,
   ) {}
 
+  async countUsers(): Promise<number> {
+    return await this.usersRepository.count();
+  }
+
   async create(signUpUserDto: SignUpUserDto): Promise<User> {
     const hashedPassword = bcrypt.hashSync(signUpUserDto.password, 10);
     const user = this.usersRepository.create({
@@ -25,12 +29,12 @@ export class UsersService {
   async setSeniorRole(userId: number) {
     return this.usersRepository.update(
       { id: userId },
-      { role: { id: RoleEnum.SENIOR } },
+      { roleId: RoleEnum.SENIOR },
     );
   }
 
   async setUserRole(userId: number, roleId: number) {
-    if(userId === RoleEnum.SENIOR) {
+    if (userId === RoleEnum.SENIOR) {
       throw new BadRequestException('Cannot change the role for this user');
     }
 
@@ -40,7 +44,7 @@ export class UsersService {
 
     const updating: UpdateResult = await this.usersRepository.update(
       { id: userId },
-      { role: { id: roleId } },
+      { roleId: roleId },
     );
 
     return {
@@ -50,7 +54,10 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+    return this.usersRepository.findOne({
+      where: { id },
+      relations: ['role'],
+    });
   }
 
   async findByNickName(nickName: string): Promise<User | null> {

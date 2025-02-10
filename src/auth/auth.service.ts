@@ -13,8 +13,13 @@ import { DynamoDBService } from '../dynamodb/dynamodb.service';
 import { UsersService } from '../users/users.service';
 import { SignInUserDto, SignUpUserDto } from '../users/dtos';
 import { User } from '../users/user.entity';
-import { SENIOR_USER_ID, ROLE_NAMES } from '../constants/users';
-import { REDIS_PREFIX, REFRESH_TOKEN_EXPIRY, REVOKED_ACCESS_TOKEN_EXPIRY } from '../constants/redis';
+import { ROLE_NAMES, RoleEnum } from '../constants/users';
+import {
+  REDIS_PREFIX,
+  REFRESH_TOKEN_EXPIRY,
+  REVOKED_ACCESS_TOKEN_EXPIRY,
+} from '../constants/redis';
+import * as console from 'node:console';
 
 @Injectable()
 export class AuthService {
@@ -40,10 +45,14 @@ export class AuthService {
     if (existingUser)
       throw new BadRequestException('Nickname is already taken');
 
+    const existingUsersCount = await this.usersService.countUsers();
     const user = await this.usersService.create(signUpUserDto);
-    const seniorUserId = user?.id === SENIOR_USER_ID;
 
-    if (seniorUserId) await this.usersService.setSeniorRole(SENIOR_USER_ID);
+    if (existingUsersCount === 0) {
+      await this.usersService.setSeniorRole(user.id);
+    } else {
+      await this.usersService.setUserRole(user.id, RoleEnum.TRAINEE);
+    }
 
     return this.generateTokens(user);
   }
@@ -153,10 +162,14 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async logout(userId: number, authHeader: string): Promise<{ message: string }> {
+  async logout(
+    userId: number,
+    authHeader: string,
+  ): Promise<{ message: string }> {
     let accessToken: string = '';
 
-    if (authHeader?.startsWith('Bearer ')) accessToken = authHeader.split(' ')[1];
+    if (authHeader?.startsWith('Bearer '))
+      accessToken = authHeader.split(' ')[1];
 
     const user = await this.usersService.findById(userId);
     if (!user?.nickName) {
@@ -189,7 +202,10 @@ export class AuthService {
         ),
         this.redisClient.del(sessionRedisKey),
         this.redisClient.lpush(this.revokedAccessTokenKey(userId), accessToken),
-        this.redisClient.expire(this.revokedAccessTokenKey(userId), REVOKED_ACCESS_TOKEN_EXPIRY)
+        this.redisClient.expire(
+          this.revokedAccessTokenKey(userId),
+          REVOKED_ACCESS_TOKEN_EXPIRY,
+        ),
       ]);
     }
 

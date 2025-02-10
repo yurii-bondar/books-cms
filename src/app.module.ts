@@ -6,6 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ExpressContext } from 'apollo-server-express/dist/ApolloServer';
 import { join } from 'path';
+import { Client } from 'pg';
 import { AuthModule } from './auth/auth.module';
 import { BooksModule } from './books/book.module';
 import { DynamoDBService } from './dynamodb/dynamodb.service';
@@ -25,17 +26,20 @@ import { Book } from './books/book.entity';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('POSTGRES_DB_HOSTNAME'),
-        port: configService.get('POSTGRES_DB_PORT'),
-        username: configService.get('POSTGRES_DB_USERNAME'),
-        password: configService.get('POSTGRES_DB_PASSWORD'),
-        database: configService.get('POSTGRES_DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-        entities: [User, Role, Permission, Book],
-      }),
+      useFactory: async (configService: ConfigService) =>  {
+        await ensureDatabasesExist(configService);
+        return {
+          type: 'postgres',
+          host: configService.get('POSTGRES_DB_HOSTNAME'),
+          port: configService.get('POSTGRES_DB_PORT'),
+          username: configService.get('POSTGRES_DB_USERNAME'),
+          password: configService.get('POSTGRES_DB_PASSWORD'),
+          database: configService.get('POSTGRES_DB_NAME'),
+          autoLoadEntities: true,
+          synchronize: true,
+          entities: [User, Role, Permission, Book],
+        };
+      },
       inject: [ConfigService],
     }),
     RedisModule.forRootAsync({
@@ -64,10 +68,7 @@ import { Book } from './books/book.entity';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    DynamoDBService
-  ],
+  providers: [AppService, DynamoDBService],
 })
 export class AppModule {
   constructor(private readonly dynamoDBService: DynamoDBService) {}
@@ -76,3 +77,47 @@ export class AppModule {
     await this.dynamoDBService.initializeTables();
   }
 }
+
+async function ensureDatabasesExist(configService: ConfigService) {
+  const client = new Client({
+    host: configService.get('POSTGRES_DB_HOSTNAME'),
+    port: configService.get('POSTGRES_DB_PORT'),
+    user: configService.get('POSTGRES_DB_USERNAME'),
+    password: configService.get('POSTGRES_DB_PASSWORD'),
+    database: 'postgres',
+  });
+
+  await client.connect();
+
+  const databasesToCreate = [
+    configService.get('POSTGRES_DB_NAME'),
+    configService.get('POSTGRES_TEST_DB_NAME'),
+  ];
+
+  for (const dbName of databasesToCreate) {
+    if (!dbName) {
+      console.error('Database name is undefined. Please check your configuration.');
+      continue;
+    }
+
+    const result = await client.query(
+      `SELECT 1 FROM pg_database WHERE datname = $1`,
+      [dbName],
+    );
+
+    if (result.rowCount === 0) {
+      console.log(`Database "${dbName}" does not exist. Creating...`);
+      try {
+        await client.query(`CREATE DATABASE "${dbName}";`);
+        console.log(`Database "${dbName}" created successfully.`);
+      } catch (error) {
+        console.error(`Error creating database "${dbName}":`, error.message);
+      }
+    } else {
+      console.log(`Database "${dbName}" already exists.`);
+    }
+  }
+
+  await client.end();
+}
+
