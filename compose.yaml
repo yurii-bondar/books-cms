@@ -1,0 +1,85 @@
+networks:
+  books-cms:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    env_file:
+      - env/compose.env
+    volumes:
+      - /home/yurii/db-storage/sql/postgres-cms:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - books-cms
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    command:
+      - redis-server
+      - --requirepass password333
+      - --user books_cms on +@all ~* >password333
+      - --appendonly yes
+      - --save 60 1
+      - --dbfilename dump.rdb
+      - --dir /data
+    ports:
+      - "6379:6379"
+    env_file:
+      - env/compose.env
+    volumes:
+      - /home/yurii/db-storage/redis-cms:/data  # Збереження Redis-файлів
+    networks:
+      - books-cms
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    networks:
+      - books-cms
+    command: -jar DynamoDBLocal.jar -sharedDb
+    volumes:
+      - /home/yurii/db-storage/no-sql/dynamodb:/home/dynamodblocal/data
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    container_name: dynamodb-gui
+    depends_on:
+      - dynamodb
+    ports:
+      - "8001:8001"
+    env_file:
+      - env/compose.env
+    networks:
+      - books-cms
+
+  books-cms:
+    build: ./
+    image: books-cms
+    container_name: books-cms
+    restart: on-failure
+    depends_on:
+      - postgres
+      - redis
+      - dynamodb
+    links:
+      - dynamodb
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/shell/ || exit 1" ]
+      interval: 1s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "3000:80"
+    env_file:
+      - env/docker.env
+    environment:
+      - NODE_APP_INSTANCE=3000
+    entrypoint: [ "sh", "-c", "node dist/src/main.js" ]
+    networks:
+      - books-cms

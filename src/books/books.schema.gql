@@ -1,0 +1,50 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Book {
+  id: Int!
+  name: String!
+  author: String!
+  publication_date: String!
+  hard_cover: Boolean!
+  newsprint: Boolean!
+  add_date: String!
+}
+
+type BooksResponse {
+  currentPage: Int!
+  totalPages: Int!
+  page: [Book!]!
+}
+
+type Query {
+  getBooks(page: Float! = 1, limit: Float! = 10, name: String, author: String, publicationYear: Float, sortBy: String! = "add_date", sortOrder: String! = "DESC"): BooksResponse!
+}
+
+type Mutation {
+  createBook(input: CreateBookDto!): Book!
+  createBooks(input: CreateBooksDto!): [Book!]!
+  updateBook(id: Float!, input: UpdateBookDto!): Book!
+  deleteBook(id: Float!, reason: String!): Boolean!
+}
+
+input CreateBookDto {
+  name: String!
+  author: String!
+  publication_date: String!
+  hard_cover: Boolean!
+  newsprint: Boolean!
+}
+
+input CreateBooksDto {
+  books: [CreateBookDto!]!
+}
+
+input UpdateBookDto {
+  name: String
+  author: String
+  publication_date: String
+  hard_cover: Boolean
+  newsprint: Boolean
+}

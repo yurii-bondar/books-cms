@@ -1,0 +1,49 @@
+type Book {
+    id: Int!
+    name: String!
+    author: String!
+    publication_date: String!
+    hard_cover: Boolean!
+    newsprint: Boolean!
+    add_date: String!
+}
+
+input CreateBookInput {
+    name: String!
+    author: String!
+    publication_date: String!
+    hard_cover: Boolean!
+    newsprint: Boolean!
+}
+
+input UpdateBookInput {
+    name: String
+    author: String
+    publication_date: String
+    hard_cover: Boolean
+    newsprint: Boolean
+}
+
+type BooksResponse{
+    currentPage: Int
+    totalPages: Int
+    page: [Book!]!
+}
+
+type Query {
+    getBooks(
+        page: Int,
+        limit: Int,
+        name: String,
+        author: String,
+        publicationYear: Int,
+        sortBy: String,
+        sortOrder: String
+    ): BooksResponse
+}
+
+type Mutation {
+    createBook(input: CreateBookInput!): Book
+    updateBook(id: Int!, input: UpdateBookInput!): Book
+    deleteBook(id: Int!): Boolean
+}
