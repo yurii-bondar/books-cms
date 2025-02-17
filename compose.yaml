@@ -9,7 +9,7 @@ services:
     env_file:
       - env/compose.env
     volumes:
-      - /home/yurii/db-storage/sql/postgres-cms:/var/lib/postgresql/data
+      - $HOME/db-storage/sql/postgres-cms:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     networks:
@@ -20,8 +20,8 @@ services:
     container_name: redis
     command:
       - redis-server
-      - --requirepass password333
-      - --user books_cms on +@all ~* >password333
+      - --requirepass ${REDIS_PASSWORD}
+      - --user ${REDIS_USER} on +@all ~* >${REDIS_PASSWORD}
       - --appendonly yes
       - --save 60 1
       - --dbfilename dump.rdb
@@ -31,7 +31,7 @@ services:
     env_file:
       - env/compose.env
     volumes:
-      - /home/yurii/db-storage/redis-cms:/data  # Збереження Redis-файлів
+      - $HOME/db-storage/redis-cms:/data  # save Redis-files
     networks:
       - books-cms
 
@@ -44,7 +44,7 @@ services:
       - books-cms
     command: -jar DynamoDBLocal.jar -sharedDb
     volumes:
-      - /home/yurii/db-storage/no-sql/dynamodb:/home/dynamodblocal/data
+      - $HOME/db-storage/no-sql/dynamodb:/home/dynamodblocal/data
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin

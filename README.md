@@ -1,70 +1,108 @@
-### Clone repository
+# Books CMS
+
+## Table of Contents
+1. [Getting Started](#getting-started)
+   - [Clone Repository](#clone-repository)
+   - [Run Services](#run-services)
+   - [Install Dependencies](#install-dependencies)
+   - [Build TypeScript](#build-typescript)
+   - [Start the Application](#start-the-application)
+   - [Database Migration](#database-migration)
+2. [Testing](#testing)
+3. [API Requests](#api-requests)
+   - [REST Requests](#rest-requests)
+     - [Register User](#register-user)
+     - [Login User](#login-user)
+     - [Refresh Tokens](#refresh-tokens)
+     - [Logout](#logout)
+     - [Set User Role](#set-user-role)
+   - [GraphQL Requests](#graphql-requests)
+     - [Create Book](#create-book)
+     - [Create Multiple Books](#create-multiple-books)
+     - [Update Book](#update-book)
+     - [Delete Book](#delete-book)
+     - [Get Books](#get-books)
+4. [Data Storage](#data-storage)
+   - [Main Data Storage](#main-data-storage)
+   - [Application Logs](#application-logs)
+
+## Getting Started
+
+### Clone Repository
 ```bash
 git clone git@github.com:yurii-bondar/books-cms.git
 ```
 
-### Run redis, postgres, dynamodb, dynamodb-gui with docker
+### Run Services
+Run Redis, PostgreSQL, DynamoDB, and DynamoDB GUI with Docker:
 ```bash
 npm run start:maintanance:services
 ```
 
-### Run app (if you want to work through a docker instead of 'start:dev' or 'start:prod')
+To run the app through Docker (instead of 'start:dev' or 'start:prod'):
 ```bash
 # set envFilePath: 'env/docker.env' in src/app.module.ts
 npm run start:app:docker
 ```
 
-### Install dependencies (due to dependency conflicts, we use 'legacy-peer-deps')
+### Install Dependencies
+Due to dependency conflicts, we use 'legacy-peer-deps':
 ```bash
 npm i --legacy-peer-deps
 ```
 
-### Build TS
+### Build TypeScript
 ```bash
 npm run build
 ```
 
-### App start
+### Start the Application
+Set `envFilePath: 'env/dev.env'` in `src/app.module.ts`, then run:
+
+For development:
 ```bash
-# set envFilePath: 'env/dev.env' in src/app.module.ts
+npm run start:dev
+```
 
-# dev
-start:dev
-
-# prod
+For production:
+```bash
 npm run start:prod
 ```
 
-### DB migration (choose the option you need)
+### Database Migration
+Choose the appropriate option:
 ```bash
-# docker
+# For Docker
 npm run migration:docker
 
-# dev
+# For development
 npm run migration
 
-# test
+# For testing
 npm run migration:test
 ```
 
-### For tests
+## Testing
 ```bash
-# There is likely to be an error here because the 'role' and 'permissions' tables are empty
+# Run tests (note: 'role' and 'permissions' tables might be empty)
 npm run test
 
-# Fill in the above tables with data
+# Fill 'role' and 'permissions' tables with data
 npm run migration:test
 
-# Run the tests again
+# Run tests again
 npm run test
 ```
-### And enjoy this beauty
-![alt text](./imgs/testsResult.png)
 
-### REST requests:
+Test results:
+![Test Results](./imgs/testsResult.png)
 
-##### Register user:
-###### request
+## API Requests
+
+### REST Requests
+
+#### Register User
+Request:
 ```curl
 curl -XPOST -H "Content-type: application/json" -d '{
     "firstName": "Yurii",
@@ -74,84 +112,89 @@ curl -XPOST -H "Content-type: application/json" -d '{
     "password": "difficult_password"
 }' 'http://localhost:3000/auth/sign-up'
 ```
-###### response
-```bash
+
+Response:
+```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDkzNjY0LCJleHAiOjE3MzkwOTQ1NjR9.Um46-FS9uZmsFEELDE9UB68Z_UngVGApZsqdbFVCdXU",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDkzNjY0LCJleHAiOjE3Mzk2OTg0NjR9.dIe71cBRS5BtVLMHhGHu0oNGD7SDa6RjvOjwO7zeP98"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-##### Login user:
-###### request
+#### Login User
+Request:
 ```curl
 curl -XPOST -H "Content-type: application/json" -d '{
     "nickName": "avenger",
     "password": "difficult_password"
 }' 'http://localhost:3000/auth/sign-in'
 ```
-###### response
-```bash
+
+Response:
+```json
 {
   "name": "avenger",
   "role": "trainee",
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDkzOTI2LCJleHAiOjE3MzkwOTQ4MjZ9.vNCDVjoGRB6Fg-n314q64HrKu1upotdQ4ZEDYAXigq4",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDkzOTI2LCJleHAiOjE3Mzk2OTg3MjZ9.jKZD_FsDIsi-4GtQnMjMCnz2Qc2LHqs3IxTT_8T0OZk"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-##### Updating access and refresh tokens:
-###### request
+#### Refresh Tokens
+Request:
 ```curl
 curl -XPOST -H "Content-type: application/json" -d '{
-"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDkzOTI2LCJleHAiOjE3Mzk2OTg3MjZ9.jKZD_FsDIsi-4GtQnMjMCnz2Qc2LHqs3IxTT_8T0OZk"
+"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }' 'http://localhost:3000/auth/refresh'
 ```
-###### response
-```bash
+
+Response:
+```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDk0MDM1LCJleHAiOjE3MzkwOTQ5MzV9.8ModPdv7VvfK5j7j1xSbCcLJilXIFYG5CeRiYBR4yiw",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF2ZW5nZXIiLCJyb2xlSWQiOjQsInN1YiI6NCwiaWF0IjoxNzM5MDk0MDM1LCJleHAiOjE3Mzk2OTg4MzV9.Od25Z6XgRXtREj6U2U4PTgdm67hcp7DUzW0E41KCGQU"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-##### Logout:
-###### request
+#### Logout
+Request:
 ```curl
 curl -XPOST -H "Content-type: application/json" -d '{
     "userId": 4
 }' 'http://localhost:3000/auth/logout'
 ```
-###### response
-```bash
+
+Response:
+```json
 {"message":"Successfully logged out"}
 ```
 
-##### Set-up role for user:
-###### request
+#### Set User Role
+Request:
 ```curl
-curl -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imdob3N0Iiwicm9sZUlkIjoxLCJzdWIiOjEsImlhdCI6MTczOTA5NzkxMSwiZXhwIjoxNzM5MDk4ODExfQ.KIwuohmOx65Y3XGr89eQusUKqap98I3xHAEeznY6ULQ' 'http://localhost:3000/users/4/role/2'
+curl -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' 'http://localhost:3000/users/4/role/2'
 ```
-###### response
-```bash
+
+Response:
+```json
 {
   "message":"Set up role 2 for user 4",
   "status":true
 }
 ```
 
-#### GraphqQL requests:
-###### Carry out with the specified headers:
+### GraphQL Requests
+Path to GraphQL playground: '/graphql'
+
+Headers for all GraphQL requests:
 ```json
 {
-  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imdob3N0Iiwicm9sZUlkIjoxLCJzdWIiOjEsImlhdCI6MTczOTE3ODkxOCwiZXhwIjoxNzM5MTc5ODE4fQ.iQ1I-zylDAiPpn_UZXbeJlmzsqSVcLidZm5ingwHPcI"
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-###### Path to GraphQL playground: '/graphql'
-
+#### Create Book
 ```graphql
-# createBook
 mutation {
     createBook(
         input: {
@@ -171,11 +214,10 @@ mutation {
     }
 }
 ```
-### 
-![alt text](./imgs/createBook.png)
+![Create Book Result](./imgs/createBook.png)
 
+#### Create Multiple Books
 ```graphql
-# createBooks
 mutation {
     createBooks(input: {
         books: [
@@ -204,10 +246,10 @@ mutation {
     }
 }
 ```
-![alt text](./imgs/createBooks.png)
+![Create Multiple Books Result](./imgs/createBooks.png)
 
+#### Update Book
 ```graphql
-# updateBook
 mutation {
     updateBook(
         id: 9
@@ -226,18 +268,18 @@ mutation {
     }
 }
 ```
-![alt text](./imgs/updateBook.png)
+![Update Book Result](./imgs/updateBook.png)
 
+#### Delete Book
 ```graphql
-# delete
 mutation {
     deleteBook(id: 6, reason: "Test DynamoDB books logs")
 }
 ```
-![alt text](./imgs/deleteBook.png)
+![Delete Book Result](./imgs/deleteBook.png)
 
+#### Get Books
 ```graphql
-# getBooks
 query {
     getBooks(
         page:2
@@ -260,18 +302,22 @@ query {
     }
 }
 ```
-![alt text](./imgs/getBooks.png)
+![Get Books Result](./imgs/getBooks.png)
 
-### Main data storage
-##### The main data is stored in PostgreSQL
+## Data Storage
+
+### Main Data Storage
+The main data is stored in PostgreSQL:
 - Registered users: *users*
 - Books: *books*
 - User roles: *roles*
 - Permissions: *permissions*
 
-### App logs
-##### DynamoDB is used to log user sessions and actions with books
-###### users_logs
-![alt text](./imgs/usersLogs.png)
-###### books_logs
-![alt text](./imgs/booksLogs.png)
+### Application Logs
+DynamoDB is used to log user sessions and actions with books:
+
+#### Users Logs
+![Users Logs](./imgs/usersLogs.png)
+
+#### Books Logs
+![Books Logs](./imgs/booksLogs.png)
